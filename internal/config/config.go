@@ -6,14 +6,17 @@ import (
 )
 
 type Config struct {
-	AppPort     string
-	DBHost      string
-	DBPort      string
-	DBUser      string
-	DBPassword  string
-	DBName      string
-	DBSSLMode   string
-	JWTSecret   string
+	AppPort    string
+	DBHost     string
+	DBPort     string
+	DBUser     string
+	DBPassword string
+	DBName     string
+	DBSSLMode  string
+	JWTSecret  string
+	APIKey     string
+	APISecret  string
+	ChannelID  string
 }
 
 func LoadConfig() (*Config, error) {
@@ -25,11 +28,18 @@ func LoadConfig() (*Config, error) {
 		DBPassword: os.Getenv("DB_PASSWORD"),
 		DBName:     os.Getenv("DB_NAME"),
 		DBSSLMode:  getEnv("DB_SSLMODE", "disable"),
-		JWTSecret:  getEnv("JWT_SECRET", "secret"),
+		JWTSecret:  getEnv("JWT_SECRET", ""),
+		APIKey:     getEnv("API_KEY", ""),
+		APISecret:  getEnv("API_SECRET", ""),
+		ChannelID:  getEnv("CHANNEL_ID", ""),
 	}
 
 	if config.DBHost == "" || config.DBUser == "" || config.DBName == "" {
 		return nil, fmt.Errorf("❌ database environment variables not set properly")
+	}
+
+	if config.APIKey == "" || config.APISecret == "" {
+		return nil, fmt.Errorf("❌ API_KEY or API_SECRET not set properly")
 	}
 
 	return config, nil

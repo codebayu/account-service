@@ -9,9 +9,10 @@ import (
 	"github.com/codebayu/account-service/internal/handler"
 	"github.com/codebayu/account-service/internal/repository"
 	"github.com/codebayu/account-service/internal/service"
+	"github.com/codebayu/account-service/internal/middleware"
 	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v5"
-	"github.com/labstack/echo/v5/middleware"
+	echoMiddleware "github.com/labstack/echo/v5/middleware"
 )
 
 type Application struct {
@@ -52,7 +53,8 @@ func main() {
 	}
 
 	// Middleware
-	app.server.Use(middleware.RequestLogger())
+	app.server.Use(echoMiddleware.RequestLogger())
+	app.server.Use(middleware.SignatureMiddleware(cfg))
 
 	// Routes
 	app.routes()
