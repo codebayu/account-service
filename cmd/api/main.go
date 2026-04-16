@@ -5,7 +5,8 @@ import (
 	"os"
 
 	"github.com/codebayu/account-service/cmd/api/handlers"
-	"github.com/codebayu/account-service/common"
+	"github.com/codebayu/account-service/cmd/api/middlewares"
+	"github.com/codebayu/account-service/internal/database"
 	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v5"
 	"github.com/labstack/echo/v5/middleware"
@@ -23,12 +24,10 @@ func main() {
 		e.Logger.Error("Error loading .env file")
 	}
 
-	db, err := common.NewPostgres()
+	db, err := database.NewPostgres()
 	if err != nil {
 		e.Logger.Error(err.Error())
 	}
-
-	e.Use(middleware.RequestLogger())
 
 	h := handlers.Handler{
 		DB: db,
@@ -38,6 +37,7 @@ func main() {
 		handler: h,
 	}
 
+	e.Use(middlewares.CustomMiddleware, middleware.RequestLogger())
 	app.routes(h)
 	fmt.Println(app)
 	port := os.Getenv("APP_PORT")
