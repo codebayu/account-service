@@ -1,0 +1,308 @@
+basePath: /
+definitions:
+  dto.AuthResponseData:
+    properties:
+      accessToken:
+        type: string
+      accessTokenExpire:
+        type: string
+      refreshToken:
+        type: string
+      refreshTokenExpire:
+        type: string
+    type: object
+  dto.LoginRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  dto.RegisterRequest:
+    properties:
+      email:
+        type: string
+      gender:
+        enum:
+        - male
+        - female
+        type: string
+      name:
+        type: string
+      password:
+        minLength: 8
+        type: string
+    required:
+    - email
+    - gender
+    - name
+    - password
+    type: object
+  dto.UserResponse:
+    properties:
+      createdAt:
+        type: string
+      email:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      updatedAt:
+        type: string
+      uuid:
+        type: string
+    type: object
+  response.Response:
+    properties:
+      data: {}
+      result:
+        $ref: '#/definitions/response.Result'
+    type: object
+  response.Result:
+    properties:
+      code:
+        type: integer
+      errors:
+        items:
+          type: string
+        type: array
+      message:
+        type: string
+      statusCode:
+        type: integer
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: support@swagger.io
+    name: API Support
+    url: http://www.swagger.io/support
+  description: Layanan autentikasi dan manajemen pengguna dengan Clean Architecture.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: Account Service API
+  version: "1.0"
+paths:
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticate user and return access & refresh tokens
+      parameters:
+      - description: Digital Signature
+        in: header
+        name: X-Signature
+        required: true
+        type: string
+      - description: Unix Timestamp
+        in: header
+        name: X-Datetime
+        required: true
+        type: string
+      - description: Channel ID (WEB/MOBILE)
+        in: header
+        name: X-Channel
+        required: true
+        type: string
+      - description: Login Request Body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.AuthResponseData'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - SignatureAuth: []
+      - DatetimeAuth: []
+      - ChannelAuth: []
+      summary: Login as existing user
+      tags:
+      - auth
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Create a new user account with email and password
+      parameters:
+      - description: Digital Signature
+        in: header
+        name: X-Signature
+        required: true
+        type: string
+      - description: Unix Timestamp
+        in: header
+        name: X-Datetime
+        required: true
+        type: string
+      - description: Channel ID (WEB/MOBILE)
+        in: header
+        name: X-Channel
+        required: true
+        type: string
+      - description: Register Request Body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.AuthResponseData'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - SignatureAuth: []
+      - DatetimeAuth: []
+      - ChannelAuth: []
+      summary: Register a new user
+      tags:
+      - auth
+  /health:
+    get:
+      consumes:
+      - application/json
+      description: Check if the server is up and running
+      parameters:
+      - description: Digital Signature
+        in: header
+        name: X-Signature
+        required: true
+        type: string
+      - description: Unix Timestamp
+        in: header
+        name: X-Datetime
+        required: true
+        type: string
+      - description: Channel ID (WEB/MOBILE)
+        in: header
+        name: X-Channel
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - SignatureAuth: []
+      - DatetimeAuth: []
+      - ChannelAuth: []
+      summary: Health check
+      tags:
+      - health
+  /user/current:
+    get:
+      consumes:
+      - application/json
+      description: Get information of the currently authenticated user
+      parameters:
+      - description: Bearer {token}
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Digital Signature
+        in: header
+        name: X-Signature
+        required: true
+        type: string
+      - description: Unix Timestamp
+        in: header
+        name: X-Datetime
+        required: true
+        type: string
+      - description: Channel ID (WEB/MOBILE)
+        in: header
+        name: X-Channel
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.UserResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      - SignatureAuth: []
+      - DatetimeAuth: []
+      - ChannelAuth: []
+      summary: Get current user profile
+      tags:
+      - users
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+  ChannelAuth:
+    in: header
+    name: x-channel
+    type: apiKey
+  DatetimeAuth:
+    in: header
+    name: x-datetime
+    type: apiKey
+  SignatureAuth:
+    in: header
+    name: x-signature
+    type: apiKey
+swagger: "2.0"

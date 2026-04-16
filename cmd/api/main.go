@@ -13,7 +13,41 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v5"
 	echoMiddleware "github.com/labstack/echo/v5/middleware"
+
+	_ "github.com/codebayu/account-service/docs"
+	echoSwagger "github.com/swaggo/echo-swagger/v2"
 )
+
+// @title           Account Service API
+// @version         1.0
+// @description     Layanan autentikasi dan manajemen pengguna dengan Clean Architecture.
+// @termsOfService  http://swagger.io/terms/
+
+// @contact.name   API Support
+// @contact.url    http://www.swagger.io/support
+// @contact.email  support@swagger.io
+
+// @license.name  Apache 2.0
+// @license.url   http://www.apache.org/licenses/LICENSE-2.0.html
+
+// @host      localhost:8080
+// @BasePath  /
+
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+
+// @securityDefinitions.apikey SignatureAuth
+// @in header
+// @name x-signature
+
+// @securityDefinitions.apikey DatetimeAuth
+// @in header
+// @name x-datetime
+
+// @securityDefinitions.apikey ChannelAuth
+// @in header
+// @name x-channel
 
 type Application struct {
 	server       *echo.Echo
@@ -55,6 +89,9 @@ func main() {
 	// Middleware
 	app.server.Use(echoMiddleware.RequestLogger())
 	app.server.Use(middleware.SignatureMiddleware(cfg))
+
+	// Swagger
+	app.server.GET("/swagger/*", echoSwagger.WrapHandler)
 
 	// Routes
 	app.routes()
