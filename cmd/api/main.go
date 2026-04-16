@@ -2,59 +2,63 @@ package main
 
 import (
 	"fmt"
-	"os"
+	"log"
 
-	"github.com/codebayu/account-service/cmd/api/handlers"
-	"github.com/codebayu/account-service/cmd/api/middlewares"
-	"github.com/codebayu/account-service/cmd/api/services"
+	"github.com/codebayu/account-service/internal/config"
 	"github.com/codebayu/account-service/internal/database"
+	"github.com/codebayu/account-service/internal/handler"
+	"github.com/codebayu/account-service/internal/repository"
+	"github.com/codebayu/account-service/internal/service"
 	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v5"
 	"github.com/labstack/echo/v5/middleware"
 )
 
 type Application struct {
-	server  *echo.Echo
-	handler handlers.Handler
+	server       *echo.Echo
+	authHandler  *handler.AuthHandler
+	userHandler  *handler.UserHandler
+	healthHandler *handler.HealthHandler
 }
 
 func main() {
-	err := godotenv.Load(".env")
-	e := echo.New()
+	if err := godotenv.Load(".env"); err != nil {
+		log.Println("Warning: .env file not found")
+	}
+
+	cfg, err := config.LoadConfig()
 	if err != nil {
-		e.Logger.Error("Error loading .env file")
+		log.Fatal(err)
 	}
 
-	db, err := database.NewPostgres()
+	db, err := database.NewPostgres(cfg)
 	if err != nil {
-		e.Logger.Error(err.Error())
+		log.Fatal(err)
 	}
 
-	authService := services.AuthService{
-		DB: db,
-	}
+	// Repository
+	userRepo := repository.NewUserRepository(db)
 
-	userService := services.UserService{
-		DB: db,
-	}
+	// Service
+	authService := service.NewAuthService(userRepo)
+	userService := service.NewUserService(userRepo)
 
-	h := handlers.Handler{
-		DB:          db,
-		AuthService: authService,
-		UserService: userService,
-	}
+	// Handler
 	app := Application{
-		server:  e,
-		handler: h,
+		server:        echo.New(),
+		authHandler:   handler.NewAuthHandler(authService),
+		userHandler:   handler.NewUserHandler(userService),
+		healthHandler: handler.NewHealthHandler(),
 	}
 
-	e.Use(middlewares.CustomMiddleware, middleware.RequestLogger())
-	app.routes(h)
-	fmt.Println(app)
-	port := os.Getenv("APP_PORT")
-	appAddress := fmt.Sprintf("localhost:%s", port)
+	// Middleware
+	app.server.Use(middleware.RequestLogger())
 
-	if err := e.Start(appAddress); err != nil {
-		e.Logger.Error("failed to start server", "error", err)
+	// Routes
+	app.routes()
+
+	appAddress := fmt.Sprintf(":%s", cfg.AppPort)
+	if err := app.server.Start(appAddress); err != nil {
+		log.Fatal("failed to start server", err)
 	}
 }

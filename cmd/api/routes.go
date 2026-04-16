@@ -1,17 +1,16 @@
 package main
 
 import (
-	"github.com/codebayu/account-service/cmd/api/handlers"
-	"github.com/codebayu/account-service/cmd/api/middlewares"
+	"github.com/codebayu/account-service/internal/middleware"
 )
 
-func (app *Application) routes(h handlers.Handler) {
-	app.server.GET("/", h.HealthCheck)
+func (app *Application) routes() {
+	app.server.GET("/", app.healthHandler.HealthCheck)
 
 	auth := app.server.Group("/auth")
-	auth.POST("/register", h.Register)
-	auth.POST("/login", h.Login)
+	auth.POST("/register", app.authHandler.Register)
+	auth.POST("/login", app.authHandler.Login)
 
-	user := app.server.Group("/user", middlewares.AuthMiddleware)
-	user.GET("/current", h.GetCurrentUser)
+	user := app.server.Group("/user", middleware.AuthMiddleware)
+	user.GET("/current", app.userHandler.GetCurrentUser)
 }

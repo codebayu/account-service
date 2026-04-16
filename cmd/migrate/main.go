@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 
+	"github.com/codebayu/account-service/internal/config"
 	"github.com/codebayu/account-service/internal/database"
 	"github.com/joho/godotenv"
 )
@@ -10,10 +11,15 @@ import (
 func main() {
 	err := godotenv.Load(".env")
 	if err != nil {
-		log.Fatal("Error loading .env file")
+		log.Println("Warning: .env file not found")
 	}
 
-	db, err := database.NewPostgres()
+	cfg, err := config.LoadConfig()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	db, err := database.NewPostgres(cfg)
 	if err != nil {
 		log.Fatalf("Could not connect to database: %v", err)
 	}
