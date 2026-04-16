@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/codebayu/account-service/common/response"
 	"github.com/codebayu/account-service/internal/config"
@@ -15,6 +16,12 @@ import (
 func SignatureMiddleware(cfg *config.Config) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c *echo.Context) error {
+			// Skip validation for swagger and health check
+			path := c.Request().URL.Path
+			if strings.HasPrefix(path, "/swagger/") || path == "/health" {
+				return next(c)
+			}
+
 			signature := c.Request().Header.Get("x-signature")
 			datetime := c.Request().Header.Get("x-datetime")
 			channel := c.Request().Header.Get("x-channel")

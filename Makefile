@@ -1,6 +1,6 @@
 # Makefile for Account Service
 
-.PHONY: run test test-coverage coverage-html migrate tidy clean
+.PHONY: run test test-coverage coverage-html migrate tidy clean swagger
 
 # Variables
 COVERAGE_FILE = coverage.out
@@ -36,3 +36,7 @@ clean:
 	rm -f $(COVERAGE_FILE)
 	rm -f api
 	rm -f migrate
+
+# Generate Swagger documentation
+swagger:
+	go run github.com/swaggo/swag/cmd/swag@latest init -g cmd/api/main.go

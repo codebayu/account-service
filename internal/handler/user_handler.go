@@ -16,6 +16,23 @@ func NewUserHandler(userService service.UserService) *UserHandler {
 	return &UserHandler{userService: userService}
 }
 
+// GetCurrentUser godoc
+// @Summary      Get current user profile
+// @Description  Get information of the currently authenticated user
+// @Tags         users
+// @Accept       json
+// @Produce      json
+// @Param        Authorization header    string  true  "Bearer {token}"
+// @Param        X-Signature   header    string  true  "Digital Signature"
+// @Param        X-Datetime    header    string  true  "Unix Timestamp"
+// @Param        X-Channel     header    string  true  "Channel ID (WEB/MOBILE)"
+// @Success      200  {object}  response.Response{data=dto.UserResponse}
+// @Failure      401  {object}  response.Response
+// @Router       /user/current [get]
+// @Security     BearerAuth
+// @Security     SignatureAuth
+// @Security     DatetimeAuth
+// @Security     ChannelAuth
 func (h *UserHandler) GetCurrentUser(c *echo.Context) error {
 	userUUID, ok := (*c).Get("user_uuid").(string)
 	if !ok {
