@@ -34,9 +34,14 @@ func main() {
 		DB: db,
 	}
 
+	userService := services.UserService{
+		DB: db,
+	}
+
 	h := handlers.Handler{
 		DB:          db,
 		AuthService: authService,
+		UserService: userService,
 	}
 	app := Application{
 		server:  e,

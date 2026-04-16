@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/codebayu/account-service/cmd/api/handlers"
+	"github.com/codebayu/account-service/cmd/api/middlewares"
 )
 
 func (app *Application) routes(h handlers.Handler) {
@@ -10,4 +11,7 @@ func (app *Application) routes(h handlers.Handler) {
 	auth := app.server.Group("/auth")
 	auth.POST("/register", h.Register)
 	auth.POST("/login", h.Login)
+
+	user := app.server.Group("/user", middlewares.AuthMiddleware)
+	user.GET("/current", h.GetCurrentUser)
 }

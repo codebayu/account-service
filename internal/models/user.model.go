@@ -9,7 +9,7 @@ type User struct {
 	UUID      string    `json:"uuid" gorm:"type:uuid;default:gen_random_uuid()"`
 	Name      string    `json:"name"`
 	Email     string    `json:"email" gorm:"unique"`
-	Password  string    `json:"password"`
+	Password  string    `json:"-"`
 	Gender    string    `json:"gender"`
 	CreatedAt time.Time `json:"createdAt"`
 	CreatedBy string    `json:"createdBy"`

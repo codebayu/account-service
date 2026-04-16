@@ -8,4 +8,5 @@ import (
 type Handler struct {
 	DB          *gorm.DB
 	AuthService services.AuthService
+	UserService services.UserService
 }
