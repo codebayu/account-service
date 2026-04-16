@@ -6,4 +6,7 @@ import (
 
 func (app *Application) routes(h handlers.Handler) {
 	app.server.GET("/", h.HealthCheck)
+
+	auth := app.server.Group("/auth")
+	auth.POST("/register", h.Register)
 }

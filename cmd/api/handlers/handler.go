@@ -1,7 +1,11 @@
 package handlers
 
-import "gorm.io/gorm"
+import (
+	"github.com/codebayu/account-service/cmd/api/services"
+	"gorm.io/gorm"
+)
 
 type Handler struct {
-	DB *gorm.DB
+	DB          *gorm.DB
+	AuthService services.AuthService
 }

@@ -6,6 +6,7 @@ import (
 
 	"github.com/codebayu/account-service/cmd/api/handlers"
 	"github.com/codebayu/account-service/cmd/api/middlewares"
+	"github.com/codebayu/account-service/cmd/api/services"
 	"github.com/codebayu/account-service/internal/database"
 	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v5"
@@ -29,8 +30,13 @@ func main() {
 		e.Logger.Error(err.Error())
 	}
 
-	h := handlers.Handler{
+	authService := services.AuthService{
 		DB: db,
+	}
+
+	h := handlers.Handler{
+		DB:          db,
+		AuthService: authService,
 	}
 	app := Application{
 		server:  e,
