@@ -6,3 +6,8 @@ type RegisterRequest struct {
 	Password string `json:"password" validate:"required,min=8"`
 	Gender   string `json:"gender" validate:"required,oneof=male female"`
 }
+
+type LoginRequest struct {
+	Email    string `json:"email" validate:"required,email"`
+	Password string `json:"password" validate:"required"`
+}

@@ -9,4 +9,5 @@ func (app *Application) routes(h handlers.Handler) {
 
 	auth := app.server.Group("/auth")
 	auth.POST("/register", h.Register)
+	auth.POST("/login", h.Login)
 }
