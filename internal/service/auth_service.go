@@ -19,11 +19,15 @@ type AuthService interface {
 }
 
 type authService struct {
-	repo repository.UserRepository
+	repo           repository.UserRepository
+	tokenGenerator func(uuid string, duration time.Duration, isRefresh bool) (string, time.Time, error)
 }
 
 func NewAuthService(repo repository.UserRepository) AuthService {
-	return &authService{repo: repo}
+	return &authService{
+		repo:           repo,
+		tokenGenerator: utils.GenerateToken,
+	}
 }
 
 func (s *authService) Register(req dto.RegisterRequest) (*dto.AuthResponseData, error) {
@@ -74,12 +78,12 @@ func (s *authService) Login(req dto.LoginRequest) (*dto.AuthResponseData, error)
 }
 
 func (s *authService) generateAuthTokens(uuid string) (*dto.AuthResponseData, error) {
-	accessToken, accessExp, err := utils.GenerateToken(uuid, 1*time.Hour, false)
+	accessToken, accessExp, err := s.tokenGenerator(uuid, 1*time.Hour, false)
 	if err != nil {
 		return nil, apperror.ErrInternalServer
 	}
 
-	refreshToken, refreshExp, err := utils.GenerateToken(uuid, 7*24*time.Hour, true)
+	refreshToken, refreshExp, err := s.tokenGenerator(uuid, 7*24*time.Hour, true)
 	if err != nil {
 		return nil, apperror.ErrInternalServer
 	}

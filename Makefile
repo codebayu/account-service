@@ -4,7 +4,7 @@
 
 # Variables
 COVERAGE_FILE = coverage.out
-TARGET_PACKAGES = ./internal/handler/...,./internal/repository/...,./internal/service/...,./internal/utils/...
+TARGET_PACKAGES = ./internal/handler/...,./internal/repository/...,./internal/service/...,./internal/utils/...,./internal/middleware/...
 
 # Run the API server
 run:

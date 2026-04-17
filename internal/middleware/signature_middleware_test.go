@@ -94,4 +94,28 @@ func TestSignatureMiddleware(t *testing.T) {
 		assert.Equal(t, http.StatusUnauthorized, rec.Code)
 		assert.Contains(t, rec.Body.String(), "invalid channel")
 	})
+
+	t.Run("Bypass Swagger Path", func(t *testing.T) {
+		req := httptest.NewRequest(http.MethodGet, "/swagger/index.html", nil)
+		rec := httptest.NewRecorder()
+		c := e.NewContext(req, rec)
+
+		err := handler(c)
+
+		assert.NoError(t, err)
+		assert.Equal(t, http.StatusOK, rec.Code)
+		assert.Equal(t, "passed", rec.Body.String())
+	})
+
+	t.Run("Bypass Health Path", func(t *testing.T) {
+		req := httptest.NewRequest(http.MethodGet, "/health", nil)
+		rec := httptest.NewRecorder()
+		c := e.NewContext(req, rec)
+
+		err := handler(c)
+
+		assert.NoError(t, err)
+		assert.Equal(t, http.StatusOK, rec.Code)
+		assert.Equal(t, "passed", rec.Body.String())
+	})
 }
