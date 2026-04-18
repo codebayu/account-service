@@ -3,6 +3,7 @@ package database
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/codebayu/account-service/internal/config"
 	"gorm.io/driver/postgres"
@@ -19,6 +20,15 @@ func NewPostgres(cfg *config.Config) (*gorm.DB, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	// Configure connection pool
+	sqlDB, err := dbConn.DB()
+	if err != nil {
+		return nil, err
+	}
+	sqlDB.SetMaxOpenConns(10)
+	sqlDB.SetMaxIdleConns(5)
+	sqlDB.SetConnMaxLifetime(time.Hour)
 
 	log.Println("✅ database connected")
 	return dbConn, nil

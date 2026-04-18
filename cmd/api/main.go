@@ -7,12 +7,11 @@ import (
 	"github.com/codebayu/account-service/internal/config"
 	"github.com/codebayu/account-service/internal/database"
 	"github.com/codebayu/account-service/internal/handler"
+	"github.com/codebayu/account-service/internal/middleware"
 	"github.com/codebayu/account-service/internal/repository"
 	"github.com/codebayu/account-service/internal/service"
-	"github.com/codebayu/account-service/internal/middleware"
 	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v5"
-	echoMiddleware "github.com/labstack/echo/v5/middleware"
 
 	_ "github.com/codebayu/account-service/docs"
 	echoSwagger "github.com/swaggo/echo-swagger/v2"
@@ -50,9 +49,9 @@ import (
 // @name x-channel
 
 type Application struct {
-	server       *echo.Echo
-	authHandler  *handler.AuthHandler
-	userHandler  *handler.UserHandler
+	server        *echo.Echo
+	authHandler   *handler.AuthHandler
+	userHandler   *handler.UserHandler
 	healthHandler *handler.HealthHandler
 }
 
@@ -87,8 +86,7 @@ func main() {
 	}
 
 	// Middleware
-	app.server.Use(echoMiddleware.RequestLogger())
-	app.server.Use(middleware.SignatureMiddleware(cfg))
+	middleware.RegisterGlobal(app.server, cfg)
 
 	// Swagger
 	app.server.GET("/swagger/*", echoSwagger.WrapHandler)
