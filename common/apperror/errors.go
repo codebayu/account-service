@@ -29,5 +29,6 @@ var (
 	ErrUserNotFound    = New(404, 404000, "user not found", nil)
 	ErrWrongPassword   = New(401, 401008, "wrong password", nil)
 	ErrUnauthorized    = New(401, 401000, "unauthorized", nil)
+	ErrInvalidToken    = New(401, 401001, "invalid or expired token", nil)
 	ErrInternalServer  = New(500, 500000, "internal server error", nil)
 )

@@ -21,6 +21,20 @@ definitions:
     - email
     - password
     type: object
+  dto.LogoutRequest:
+    properties:
+      refreshToken:
+        type: string
+    required:
+    - refreshToken
+    type: object
+  dto.RefreshTokenRequest:
+    properties:
+      refreshToken:
+        type: string
+    required:
+    - refreshToken
+    type: object
   dto.RegisterRequest:
     properties:
       email:
@@ -145,6 +159,110 @@ paths:
       - DatetimeAuth: []
       - ChannelAuth: []
       summary: Login as existing user
+      tags:
+      - auth
+  /auth/logout:
+    post:
+      consumes:
+      - application/json
+      description: Logout user by revoking their refresh token
+      parameters:
+      - description: Digital Signature
+        in: header
+        name: X-Signature
+        required: true
+        type: string
+      - description: Unix Timestamp
+        in: header
+        name: X-Datetime
+        required: true
+        type: string
+      - description: Channel ID (WEB/MOBILE)
+        in: header
+        name: X-Channel
+        required: true
+        type: string
+      - description: Logout Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.LogoutRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      - SignatureAuth: []
+      - DatetimeAuth: []
+      - ChannelAuth: []
+      summary: Logout user
+      tags:
+      - auth
+  /auth/refresh-token:
+    post:
+      consumes:
+      - application/json
+      description: Get a new access token and refresh token via refresh token rotation
+      parameters:
+      - description: Digital Signature
+        in: header
+        name: X-Signature
+        required: true
+        type: string
+      - description: Unix Timestamp
+        in: header
+        name: X-Datetime
+        required: true
+        type: string
+      - description: Channel ID (WEB/MOBILE)
+        in: header
+        name: X-Channel
+        required: true
+        type: string
+      - description: Refresh Token Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.RefreshTokenRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.AuthResponseData'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - SignatureAuth: []
+      - DatetimeAuth: []
+      - ChannelAuth: []
+      summary: Refresh an access token
       tags:
       - auth
   /auth/register:
