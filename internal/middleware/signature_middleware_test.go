@@ -4,9 +4,11 @@ import (
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/hex"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/codebayu/account-service/internal/config"
 	"github.com/labstack/echo/v5"
@@ -27,7 +29,7 @@ func TestSignatureMiddleware(t *testing.T) {
 	})
 
 	t.Run("Success Validation", func(t *testing.T) {
-		datetime := "1713280000"
+		datetime := fmt.Sprintf("%d", time.Now().Unix())
 		stringToHash := cfg.APIKey + datetime
 		h := hmac.New(sha256.New, []byte(cfg.APISecret))
 		h.Write([]byte(stringToHash))
@@ -60,9 +62,10 @@ func TestSignatureMiddleware(t *testing.T) {
 	})
 
 	t.Run("Invalid Signature", func(t *testing.T) {
+		datetime := fmt.Sprintf("%d", time.Now().Unix())
 		req := httptest.NewRequest(http.MethodGet, "/", nil)
 		req.Header.Set("x-signature", "wrong_signature")
-		req.Header.Set("x-datetime", "1713280000")
+		req.Header.Set("x-datetime", datetime)
 		req.Header.Set("x-channel", "WEB")
 		rec := httptest.NewRecorder()
 		c := e.NewContext(req, rec)
@@ -75,7 +78,7 @@ func TestSignatureMiddleware(t *testing.T) {
 	})
 
 	t.Run("Invalid Channel", func(t *testing.T) {
-		datetime := "1713280000"
+		datetime := fmt.Sprintf("%d", time.Now().Unix())
 		stringToHash := cfg.APIKey + datetime
 		h := hmac.New(sha256.New, []byte(cfg.APISecret))
 		h.Write([]byte(stringToHash))

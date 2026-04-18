@@ -53,6 +53,7 @@ type Application struct {
 	authHandler   *handler.AuthHandler
 	userHandler   *handler.UserHandler
 	healthHandler *handler.HealthHandler
+	tokenRepo     repository.TokenRepository
 }
 
 func main() {
@@ -70,11 +71,17 @@ func main() {
 		log.Fatal(err)
 	}
 
+	rdb, err := database.NewRedisClient(cfg)
+	if err != nil {
+		log.Fatal("failed to connect to redis: ", err)
+	}
+
 	// Repository
 	userRepo := repository.NewUserRepository(db)
+	tokenRepo := repository.NewTokenRepository(rdb)
 
 	// Service
-	authService := service.NewAuthService(userRepo)
+	authService := service.NewAuthService(userRepo, tokenRepo, cfg)
 	userService := service.NewUserService(userRepo)
 
 	// Handler
@@ -83,6 +90,7 @@ func main() {
 		authHandler:   handler.NewAuthHandler(authService),
 		userHandler:   handler.NewUserHandler(userService),
 		healthHandler: handler.NewHealthHandler(),
+		tokenRepo:     tokenRepo,
 	}
 
 	// Middleware

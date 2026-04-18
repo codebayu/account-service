@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/codebayu/account-service/common/apperror"
+	"github.com/codebayu/account-service/internal/config"
 	"github.com/codebayu/account-service/internal/dto"
 	"github.com/codebayu/account-service/internal/models"
 	"github.com/stretchr/testify/assert"
@@ -20,7 +21,12 @@ func TestAuthService_Register(t *testing.T) {
 	defer os.Unsetenv("JWT_SECRET")
 
 	mockRepo := new(MockUserRepository)
-	svc := NewAuthService(mockRepo)
+	mockTokenRepo := new(MockTokenRepository)
+	mockCfg := &config.Config{
+		JWTAccessExp:  1,
+		JWTRefreshExp: 2,
+	}
+	svc := NewAuthService(mockRepo, mockTokenRepo, mockCfg)
 
 	req := dto.RegisterRequest{
 		Name:     "Test User",
@@ -32,6 +38,7 @@ func TestAuthService_Register(t *testing.T) {
 	t.Run("Success Register", func(t *testing.T) {
 		mockRepo.On("FindByEmail", req.Email).Return(nil, gorm.ErrRecordNotFound).Once()
 		mockRepo.On("Create", mock.AnythingOfType("*models.User")).Return(nil).Once()
+		mockTokenRepo.On("SaveRefreshToken", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
 
 		res, err := svc.Register(req)
 
@@ -68,7 +75,7 @@ func TestAuthService_Register(t *testing.T) {
 		mockRepo.On("FindByEmail", req.Email).Return(nil, gorm.ErrRecordNotFound).Once()
 		mockRepo.On("Create", mock.AnythingOfType("*models.User")).Return(nil).Once()
 
-		s := NewAuthService(mockRepo).(*authService)
+		s := NewAuthService(mockRepo, mockTokenRepo, mockCfg).(*authService)
 		s.tokenGenerator = func(uuid string, duration time.Duration, isRefresh bool) (string, time.Time, error) {
 			return "", time.Time{}, errors.New("token error")
 		}
@@ -87,7 +94,12 @@ func TestAuthService_Login(t *testing.T) {
 	defer os.Unsetenv("JWT_SECRET")
 
 	mockRepo := new(MockUserRepository)
-	svc := NewAuthService(mockRepo)
+	mockTokenRepo := new(MockTokenRepository)
+	mockCfg := &config.Config{
+		JWTAccessExp:  1,
+		JWTRefreshExp: 2,
+	}
+	svc := NewAuthService(mockRepo, mockTokenRepo, mockCfg)
 
 	password := "password123"
 	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
@@ -99,6 +111,7 @@ func TestAuthService_Login(t *testing.T) {
 
 	t.Run("Success Login", func(t *testing.T) {
 		mockRepo.On("FindByEmail", user.Email).Return(user, nil).Once()
+		mockTokenRepo.On("SaveRefreshToken", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
 
 		res, err := svc.Login(dto.LoginRequest{Email: user.Email, Password: password})
 
@@ -144,7 +157,7 @@ func TestAuthService_Login(t *testing.T) {
 	t.Run("Internal Server Error on Refresh Token Generation", func(t *testing.T) {
 		mockRepo.On("FindByEmail", user.Email).Return(user, nil).Once()
 
-		s := NewAuthService(mockRepo).(*authService)
+		s := NewAuthService(mockRepo, mockTokenRepo, mockCfg).(*authService)
 		s.tokenGenerator = func(uuid string, duration time.Duration, isRefresh bool) (string, time.Time, error) {
 			if isRefresh {
 				return "", time.Time{}, errors.New("token error")

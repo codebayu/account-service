@@ -26,6 +26,7 @@ func GenerateToken(uuid string, duration time.Duration, isRefresh bool) (string,
 		Role:      0, // Default role
 		IsRefresh: isRefresh,
 		RegisteredClaims: jwt.RegisteredClaims{
+			ID:        jwt.NewNumericDate(time.Now()).String(), // Use timestamp as simple JTI
 			ExpiresAt: jwt.NewNumericDate(expiresAt),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 		},

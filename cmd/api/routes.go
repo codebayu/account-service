@@ -10,7 +10,9 @@ func (app *Application) routes() {
 	auth := app.server.Group("/auth")
 	auth.POST("/register", app.authHandler.Register)
 	auth.POST("/login", app.authHandler.Login)
+	auth.POST("/refresh-token", app.authHandler.RefreshToken)
+	auth.POST("/logout", app.authHandler.Logout, middleware.AuthMiddleware(app.tokenRepo))
 
-	user := app.server.Group("/user", middleware.AuthMiddleware)
+	user := app.server.Group("/user", middleware.AuthMiddleware(app.tokenRepo))
 	user.GET("/current", app.userHandler.GetCurrentUser)
 }
