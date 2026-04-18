@@ -3,20 +3,22 @@ package config
 import (
 	"fmt"
 	"os"
+	"strings"
 )
 
 type Config struct {
-	AppPort    string
-	DBHost     string
-	DBPort     string
-	DBUser     string
-	DBPassword string
-	DBName     string
-	DBSSLMode  string
-	JWTSecret  string
-	APIKey     string
-	APISecret  string
-	ChannelID  string
+	AppPort        string
+	DBHost         string
+	DBPort         string
+	DBUser         string
+	DBPassword     string
+	DBName         string
+	DBSSLMode      string
+	JWTSecret      string
+	APIKey         string
+	APISecret      string
+	ChannelID      string
+	AllowedOrigins []string
 }
 
 func LoadConfig() (*Config, error) {
@@ -41,6 +43,12 @@ func LoadConfig() (*Config, error) {
 	if config.APIKey == "" || config.APISecret == "" {
 		return nil, fmt.Errorf("❌ API_KEY or API_SECRET not set properly")
 	}
+
+	allowedOrigins := os.Getenv("ALLOWED_ORIGINS")
+	if allowedOrigins == "" {
+		return nil, fmt.Errorf("❌ ALLOWED_ORIGINS not set properly")
+	}
+	config.AllowedOrigins = strings.Split(allowedOrigins, ",")
 
 	return config, nil
 }

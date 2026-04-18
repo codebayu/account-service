@@ -4,19 +4,21 @@ import (
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/hex"
-	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/codebayu/account-service/common/response"
 	"github.com/codebayu/account-service/internal/config"
 	"github.com/labstack/echo/v5"
 )
 
+const signatureWindow = 5 * time.Minute
+
 func SignatureMiddleware(cfg *config.Config) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c *echo.Context) error {
-			// Skip validation for swagger and health check
 			path := c.Request().URL.Path
 			if strings.HasPrefix(path, "/swagger/") || path == "/health" {
 				return next(c)
@@ -36,13 +38,37 @@ func SignatureMiddleware(cfg *config.Config) echo.MiddlewareFunc {
 				})
 			}
 
-			// Generate signature: HMAC-SHA256(apiSecret, apiKey + unixTimestamp)
+			// 1. Validate timestamp — prevent replay attacks
+			ts, err := strconv.ParseInt(datetime, 10, 64)
+			if err != nil {
+				return c.JSON(http.StatusUnauthorized, response.Response{
+					Result: response.Result{
+						Code:       401002,
+						StatusCode: http.StatusUnauthorized,
+						Message:    "invalid x-datetime format, must be unix timestamp",
+					},
+				})
+			}
+
+			requestTime := time.Unix(ts, 0)
+			diff := time.Since(requestTime)
+			if diff > signatureWindow || diff < -signatureWindow {
+				return c.JSON(http.StatusUnauthorized, response.Response{
+					Result: response.Result{
+						Code:       401003,
+						StatusCode: http.StatusUnauthorized,
+						Message:    "request expired, timestamp out of allowed window",
+					},
+				})
+			}
+
+			// 2. Validate HMAC — constant-time compare (prevent timing attacks)
 			stringToHash := cfg.APIKey + datetime
 			h := hmac.New(sha256.New, []byte(cfg.APISecret))
 			h.Write([]byte(stringToHash))
 			calculatedSignature := hex.EncodeToString(h.Sum(nil))
 
-			if calculatedSignature != signature {
+			if !hmac.Equal([]byte(calculatedSignature), []byte(signature)) {
 				return c.JSON(http.StatusUnauthorized, response.Response{
 					Result: response.Result{
 						Code:       401000,
@@ -52,6 +78,7 @@ func SignatureMiddleware(cfg *config.Config) echo.MiddlewareFunc {
 				})
 			}
 
+			// 3. Validate channel
 			if channel != cfg.ChannelID {
 				return c.JSON(http.StatusUnauthorized, response.Response{
 					Result: response.Result{
@@ -62,7 +89,6 @@ func SignatureMiddleware(cfg *config.Config) echo.MiddlewareFunc {
 				})
 			}
 
-			fmt.Println("✅ signature validated")
 			return next(c)
 		}
 	}
